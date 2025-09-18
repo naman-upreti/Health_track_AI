@@ -1,0 +1,51 @@
+age,weight,height,gender,activity_level,fitness_goal,bmi,experience_level
+25,70,175,Male,Moderate,Weight Loss,22.86,Beginner
+30,85,180,Male,High,Muscle Gain,26.23,Intermediate
+22,55,165,Female,Low,Endurance,20.20,Beginner
+35,90,185,Male,Very High,Muscle Gain,26.30,Advanced
+28,65,170,Female,Moderate,Weight Loss,22.49,Intermediate
+40,95,175,Male,Low,Maintenance,31.02,Beginner
+26,60,160,Female,High,Endurance,23.44,Intermediate
+33,80,178,Male,Moderate,Muscle Gain,25.25,Advanced
+29,58,162,Female,Low,Weight Loss,22.10,Beginner
+31,88,182,Male,Very High,Endurance,26.59,Advanced
+24,62,168,Female,Moderate,Maintenance,21.97,Intermediate
+38,92,180,Male,High,Weight Loss,28.40,Advanced
+27,67,172,Female,Low,Muscle Gain,22.65,Beginner
+32,82,176,Male,Moderate,Endurance,26.46,Intermediate
+23,56,163,Female,High,Weight Loss,21.08,Beginner
+36,86,179,Male,Very High,Muscle Gain,26.83,Advanced
+25,63,166,Female,Moderate,Maintenance,22.86,Intermediate
+39,94,183,Male,Low,Weight Loss,28.08,Beginner
+28,69,174,Female,High,Endurance,22.78,Advanced
+34,84,177,Male,Moderate,Muscle Gain,26.81,Intermediate
+21,54,161,Female,Low,Weight Loss,20.83,Beginner
+37,89,181,Male,Very High,Endurance,27.18,Advanced
+26,61,167,Female,Moderate,Maintenance,21.89,Intermediate
+41,96,184,Male,High,Weight Loss,28.38,Beginner
+30,66,169,Female,Low,Muscle Gain,23.12,Intermediate
+33,87,178,Male,Moderate,Endurance,27.46,Advanced
+24,59,164,Female,High,Weight Loss,21.93,Beginner
+35,91,180,Male,Very High,Muscle Gain,28.09,Advanced
+27,64,170,Female,Moderate,Maintenance,22.15,Intermediate
+42,97,185,Male,Low,Weight Loss,28.34,Beginner
+29,68,173,Female,High,Endurance,22.72,Advanced
+31,83,179,Male,Moderate,Muscle Gain,25.91,Intermediate
+22,57,162,Female,Low,Weight Loss,21.73,Beginner
+38,90,182,Male,Very High,Endurance,27.17,Advanced
+25,65,171,Female,Moderate,Maintenance,22.24,Intermediate
+40,93,181,Male,High,Weight Loss,28.42,Beginner
+28,70,175,Female,Low,Muscle Gain,22.86,Intermediate
+34,85,177,Male,Moderate,Endurance,27.13,Advanced
+23,58,163,Female,High,Weight Loss,21.83,Beginner
+36,88,180,Male,Very High,Muscle Gain,27.16,Advanced
+45,78,172,Female,Moderate,Maintenance,26.37,Intermediate
+50,85,175,Male,Low,Weight Loss,27.76,Beginner
+19,62,168,Female,High,Endurance,21.97,Beginner
+55,92,178,Male,Moderate,Maintenance,29.03,Advanced
+32,76,174,Female,Very High,Muscle Gain,25.10,Intermediate
+47,88,180,Male,High,Weight Loss,27.16,Advanced
+24,59,165,Female,Low,Maintenance,21.67,Beginner
+39,82,176,Male,Moderate,Endurance,26.46,Intermediate
+26,67,170,Female,High,Weight Loss,23.18,Intermediate
+44,90,182,Male,Very High,Muscle Gain,27.17,Advanced

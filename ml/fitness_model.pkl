@@ -1,0 +1,10 @@
+# This file will be generated when running ml/train_model.py
+# It contains the serialized RandomForest model and label encoders
+# The file is created using joblib.dump() and contains:
+# - trained RandomForest classifier
+# - label encoders for categorical features
+# - feature column names
+# - model metadata
+
+# To generate this file, run:
+# python ml/train_model.py
