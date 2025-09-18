@@ -71,6 +71,8 @@ def main():
         show_ai_coach_page()
     elif page == "📊 Progress Tracking":
         show_progress_page()
+    elif page == "👤 User Profile":
+        show_profile_page()
 
 def show_home_page():
     """Display the home page"""
@@ -645,6 +647,184 @@ def show_progress_page():
             st.session_state.progress_data = sample_data
             st.success("✅ Sample data loaded!")
             st.rerun()
+
+def show_profile_page():
+    """Display user profile and authentication page"""
+    st.header("👤 User Profile & Authentication")
+    
+    # Initialize session state for user authentication
+    if 'user_authenticated' not in st.session_state:
+        st.session_state.user_authenticated = False
+        st.session_state.user_data = None
+    
+    if not st.session_state.user_authenticated:
+        # Show login/registration form
+        tab1, tab2 = st.tabs(["🔑 Login", "📝 Register"])
+        
+        with tab1:
+            st.subheader("Login to Your Account")
+            with st.form("login_form"):
+                email = st.text_input("Email")
+                password = st.text_input("Password", type="password")
+                
+                if st.form_submit_button("🔑 Login", type="primary"):
+                    if email and password:
+                        login_data = {"email": email, "password": password}
+                        response = make_api_request("auth/login", login_data)
+                        
+                        if response and response.get('success'):
+                            st.session_state.user_authenticated = True
+                            st.session_state.user_data = response.get('user')
+                            st.session_state.user_id = response.get('user', {}).get('id')
+                            st.success("✅ Login successful!")
+                            st.rerun()
+                        else:
+                            st.error("❌ Invalid email or password")
+                    else:
+                        st.warning("Please fill in all fields")
+        
+        with tab2:
+            st.subheader("Create New Account")
+            with st.form("register_form"):
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    reg_email = st.text_input("Email*")
+                    reg_name = st.text_input("Full Name*")
+                    reg_password = st.text_input("Password*", type="password")
+                    age = st.number_input("Age", min_value=16, max_value=100, value=25)
+                
+                with col2:
+                    weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=70.0, step=0.1)
+                    height = st.number_input("Height (cm)", min_value=120.0, max_value=220.0, value=170.0, step=1.0)
+                    gender = st.selectbox("Gender", ["Male", "Female", "Other"])
+                    activity_level = st.selectbox("Activity Level", ["Low", "Moderate", "High", "Very High"])
+                
+                experience_level = st.selectbox("Experience Level", ["Beginner", "Intermediate", "Advanced"])
+                fitness_goal = st.selectbox("Primary Fitness Goal", ["Weight Loss", "Muscle Gain", "Endurance", "Maintenance"])
+                
+                if st.form_submit_button("📝 Create Account", type="primary"):
+                    if reg_email and reg_name and reg_password:
+                        registration_data = {
+                            "email": reg_email,
+                            "password": reg_password,
+                            "full_name": reg_name,
+                            "age": age,
+                            "weight": weight,
+                            "height": height,
+                            "gender": gender,
+                            "activity_level": activity_level,
+                            "experience_level": experience_level,
+                            "fitness_goal": fitness_goal
+                        }
+                        
+                        response = make_api_request("auth/register", registration_data)
+                        
+                        if response and response.get('success'):
+                            st.success("✅ Account created successfully! You can now login.")
+                        else:
+                            error_msg = response.get('detail', 'Registration failed') if response else 'Connection error'
+                            st.error(f"❌ {error_msg}")
+                    else:
+                        st.warning("Please fill in all required fields (*)")
+    
+    else:
+        # Show user profile and settings
+        st.success(f"👋 Welcome, {st.session_state.user_data.get('full_name', 'User')}!")
+        
+        # Logout button in sidebar
+        if st.sidebar.button("🚪 Logout"):
+            st.session_state.user_authenticated = False
+            st.session_state.user_data = None
+            st.session_state.user_id = None
+            st.success("✅ Logged out successfully!")
+            st.rerun()
+        
+        # Get user profile
+        user_id = st.session_state.user_id
+        profile_response = make_api_request(f"auth/profile/{user_id}")
+        
+        if profile_response and profile_response.get('success'):
+            profile = profile_response.get('profile', {})
+            
+            # Display current profile
+            st.subheader("📊 Your Profile")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Age", f"{profile.get('age', 'N/A')} years")
+                st.metric("Weight", f"{profile.get('weight', 'N/A')} kg")
+            
+            with col2:
+                st.metric("Height", f"{profile.get('height', 'N/A')} cm")
+                bmi = None
+                if profile.get('weight') and profile.get('height'):
+                    bmi = profile['weight'] / ((profile['height'] / 100) ** 2)
+                    st.metric("BMI", f"{bmi:.1f}")
+                else:
+                    st.metric("BMI", "N/A")
+            
+            with col3:
+                st.metric("Activity Level", profile.get('activity_level', 'N/A'))
+                st.metric("Experience", profile.get('experience_level', 'N/A'))
+            
+            # Profile update form
+            st.subheader("✏️ Update Profile")
+            
+            with st.form("profile_update_form"):
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    new_age = st.number_input("Age", min_value=16, max_value=100, value=profile.get('age', 25))
+                    new_weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, 
+                                               value=float(profile.get('weight', 70.0)), step=0.1)
+                    new_height = st.number_input("Height (cm)", min_value=120.0, max_value=220.0, 
+                                               value=float(profile.get('height', 170.0)), step=1.0)
+                
+                with col2:
+                    new_gender = st.selectbox("Gender", ["Male", "Female", "Other"], 
+                                            index=["Male", "Female", "Other"].index(profile.get('gender', 'Male')) 
+                                            if profile.get('gender') in ["Male", "Female", "Other"] else 0)
+                    new_activity = st.selectbox("Activity Level", ["Low", "Moderate", "High", "Very High"],
+                                              index=["Low", "Moderate", "High", "Very High"].index(profile.get('activity_level', 'Moderate'))
+                                              if profile.get('activity_level') in ["Low", "Moderate", "High", "Very High"] else 1)
+                    new_experience = st.selectbox("Experience Level", ["Beginner", "Intermediate", "Advanced"],
+                                                index=["Beginner", "Intermediate", "Advanced"].index(profile.get('experience_level', 'Beginner'))
+                                                if profile.get('experience_level') in ["Beginner", "Intermediate", "Advanced"] else 0)
+                
+                new_goal = st.selectbox("Fitness Goal", ["Weight Loss", "Muscle Gain", "Endurance", "Maintenance"],
+                                      index=["Weight Loss", "Muscle Gain", "Endurance", "Maintenance"].index(profile.get('fitness_goal', 'Maintenance'))
+                                      if profile.get('fitness_goal') in ["Weight Loss", "Muscle Gain", "Endurance", "Maintenance"] else 3)
+                
+                if st.form_submit_button("💾 Update Profile", type="primary"):
+                    update_data = {
+                        "age": new_age,
+                        "weight": new_weight,
+                        "height": new_height,
+                        "gender": new_gender,
+                        "activity_level": new_activity,
+                        "experience_level": new_experience,
+                        "fitness_goal": new_goal
+                    }
+                    
+                    # Make API request to update profile
+                    try:
+                        response = requests.put(f"{API_BASE_URL}/auth/profile/{user_id}", json=update_data, timeout=30)
+                        if response.status_code == 200:
+                            result = response.json()
+                            if result.get('success'):
+                                st.success("✅ Profile updated successfully!")
+                                st.rerun()
+                            else:
+                                st.error("❌ Failed to update profile")
+                        else:
+                            st.error(f"❌ Update failed: {response.status_code}")
+                    except:
+                        st.error("❌ Connection error while updating profile")
+        
+        else:
+            st.error("Failed to load profile data")
 
 if __name__ == "__main__":
     main()

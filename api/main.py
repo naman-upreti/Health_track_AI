@@ -11,10 +11,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'ml'))
 
 from recommender import FitnessRecommender
 from genai import FitnessAIAdvisor
+from database import db
 
 # Import prediction function
 try:
-    from train_model import predict_fitness_goal
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    from ml.train_model import predict_fitness_goal
 except ImportError:
     def predict_fitness_goal(*args, **kwargs):
         return {"predicted_goal": "Maintenance", "confidence": 0.5, "probabilities": {"Maintenance": 0.5}}
@@ -55,6 +57,40 @@ class PredictionRequest(BaseModel):
     activity_level: str
     experience_level: Optional[str] = "Beginner"
 
+class ProgressEntry(BaseModel):
+    user_id: int
+    log_type: str
+    date: str
+    value: Optional[float] = None
+    unit: Optional[str] = None
+    notes: Optional[str] = None
+    data: Optional[Dict] = None
+
+class UserRegistration(BaseModel):
+    email: str
+    password: str
+    full_name: str
+    age: Optional[int] = None
+    weight: Optional[float] = None
+    height: Optional[float] = None
+    gender: Optional[str] = None
+    activity_level: Optional[str] = None
+    experience_level: Optional[str] = None
+    fitness_goal: Optional[str] = None
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class UserProfileUpdate(BaseModel):
+    age: Optional[int] = None
+    weight: Optional[float] = None
+    height: Optional[float] = None
+    gender: Optional[str] = None
+    activity_level: Optional[str] = None
+    experience_level: Optional[str] = None
+    fitness_goal: Optional[str] = None
+
 @app.get("/")
 async def root():
     """Health check endpoint"""
@@ -67,7 +103,13 @@ async def root():
             "recommend": "/recommend", 
             "genai": "/genai",
             "full_plan": "/full_plan",
-            "meal_plan": "/meal_plan"
+            "meal_plan": "/meal_plan",
+            "progress": "/progress",
+            "auth": {
+                "register": "/auth/register",
+                "login": "/auth/login",
+                "profile": "/auth/profile"
+            }
         }
     }
 
@@ -260,6 +302,160 @@ async def get_full_plan(request: PredictionRequest):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Full plan generation failed: {str(e)}")
+
+# Progress Tracking Endpoints
+@app.post("/progress")
+async def add_progress_entry(entry: ProgressEntry):
+    """Add a progress entry for a user"""
+    try:
+        from datetime import datetime
+        entry_date = datetime.strptime(entry.date, '%Y-%m-%d').date()
+        
+        entry_id = db.log_progress(
+            user_id=entry.user_id,
+            log_type=entry.log_type,
+            date=entry_date,
+            value=entry.value,
+            unit=entry.unit,
+            notes=entry.notes,
+            data=entry.data
+        )
+        
+        if entry_id:
+            return {
+                "success": True,
+                "message": "Progress entry added successfully",
+                "entry_id": entry_id
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to add progress entry")
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Progress entry failed: {str(e)}")
+
+@app.get("/progress/{user_id}")
+async def get_user_progress(user_id: int, log_type: Optional[str] = None, limit: int = 100):
+    """Get user progress entries"""
+    try:
+        progress_data = db.get_user_progress(user_id, log_type, limit)
+        summary = db.get_progress_summary(user_id)
+        
+        return {
+            "success": True,
+            "user_id": user_id,
+            "progress": progress_data,
+            "summary": summary
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get progress data: {str(e)}")
+
+# Authentication Endpoints
+@app.post("/auth/register")
+async def register_user(user_data: UserRegistration):
+    """Register a new user"""
+    try:
+        # Check if user already exists
+        existing_user = db.execute_query(
+            "SELECT id FROM users WHERE email = %s", 
+            (user_data.email,), 
+            fetch_one=True
+        )
+        
+        if existing_user:
+            raise HTTPException(status_code=400, detail="User already exists with this email")
+        
+        # Create user profile data
+        profile_data = {
+            'age': user_data.age,
+            'weight': user_data.weight,
+            'height': user_data.height,
+            'gender': user_data.gender,
+            'activity_level': user_data.activity_level,
+            'experience_level': user_data.experience_level,
+            'fitness_goal': user_data.fitness_goal
+        }
+        
+        # Create user
+        user_id = db.create_user(user_data.email, user_data.password, user_data.full_name, profile_data)
+        
+        if user_id:
+            return {
+                "success": True,
+                "message": "User registered successfully",
+                "user_id": user_id
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to create user")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+
+@app.post("/auth/login")
+async def login_user(login_data: UserLogin):
+    """Authenticate user login"""
+    try:
+        user = db.authenticate_user(login_data.email, login_data.password)
+        
+        if user:
+            return {
+                "success": True,
+                "message": "Login successful",
+                "user": user
+            }
+        else:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
+
+@app.get("/auth/profile/{user_id}")
+async def get_user_profile(user_id: int):
+    """Get user profile"""
+    try:
+        profile = db.get_user_profile(user_id)
+        
+        if profile:
+            return {
+                "success": True,
+                "profile": profile
+            }
+        else:
+            raise HTTPException(status_code=404, detail="User not found")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get profile: {str(e)}")
+
+@app.put("/auth/profile/{user_id}")
+async def update_user_profile(user_id: int, profile_data: UserProfileUpdate):
+    """Update user profile"""
+    try:
+        # Convert to dict and remove None values
+        update_data = {k: v for k, v in profile_data.dict().items() if v is not None}
+        
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No valid data to update")
+        
+        success = db.update_user_profile(user_id, update_data)
+        
+        if success:
+            return {
+                "success": True,
+                "message": "Profile updated successfully"
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to update profile")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Profile update failed: {str(e)}")
 
 def get_bmi_category(bmi: float) -> str:
     """Categorize BMI value"""
