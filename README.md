@@ -1,6 +1,3 @@
-Perfect 👍 Here’s the **complete and proper `README.md` file** with everything structured in **one clean Markdown document**, ready to drop into your repo:
-
----
 
 ````markdown
 # 🏋️‍♀️ Health Track AI  
