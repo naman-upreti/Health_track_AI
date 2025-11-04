@@ -63,10 +63,4 @@ streamlit run app.py
 * Runs on a **modular architecture (FastAPI + Streamlit)**
 * Offers **real-time fitness insights** & **adaptive recommendations**
 * Easy to extend with wearables, gamified challenges, and mobile apps
-
----
-
-**Built with ❤️ using Python, FastAPI, Streamlit, and GPT-5**
-⭐ *Star this repo to support AI-powered fitness innovation!*
-
 ```
